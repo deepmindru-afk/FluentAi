@@ -143,13 +143,14 @@ def chat_route():
     message = data.get('message')
     username = data.get('username')
     room_name = data.get('roomName')
+    chat_messages = data.get('chatMessages' , [])
 
     if not all([message, username, room_name]):
         return jsonify({"error": "message, username, and roomName are required."}), 400
 
     try:
         # Retrieve conversation history from mem0
-        history = mem0.get_history(user_id=username)
+        # history = mem0.get_history(user_id=username)
 
         # Prepare messages for Groq API
         messages = [
@@ -158,14 +159,14 @@ def chat_route():
                 "content": "You are a helpful AI assistant. Use the conversation history to provide context-aware responses."
             }
         ]
-        for entry in history:
-            messages.append({"role": "user", "content": entry["user"]})
-            messages.append({"role": "assistant", "content": entry["agent"]})
+        for entry in chat_messages:
+            messages.append({"role": entry["role"], "content": entry["content"]})
+        
         messages.append({"role": "user", "content": message})
 
         chat_completion = groq_client.chat.completions.create(
             messages=messages,
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant"
         )
 
         ai_response = chat_completion.choices[0].message.content

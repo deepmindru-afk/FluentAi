@@ -109,11 +109,11 @@ class ApiService {
     });
   }
 
-  async sendMessage(roomName: string, username: string, message: string): Promise<ApiResponse<ChatResponse>> {
+  async sendMessage(roomName: string, username: string, message: string, chatMessages: any[]): Promise<ApiResponse<ChatResponse>> {
     console.log('Sending message:', message, 'to room:', roomName, 'from user:', username);
     return this.request<ChatResponse>('/chat', {
       method: 'POST',
-      body: JSON.stringify({ roomName, username, message }),
+      body: JSON.stringify({ roomName, username, message, chatMessages }),
     });
   }
 }

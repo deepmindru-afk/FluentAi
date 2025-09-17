@@ -133,7 +133,12 @@ function ChatInterface({ roomName, username }: { roomName: string, username: str
     // Send message to backend and get AI response
     setIsSendingApi(true)
     try {
-      const result = await apiService.sendMessage(roomName, username, userMessage)
+      const chatMessagesForAPI = chatMessages.map(msg => ({
+        role: msg.from?.identity === 'system' ? 'system' : 'user',
+        content: msg.message
+      }));
+
+      const result = await apiService.sendMessage(roomName, username, userMessage , chatMessagesForAPI)
 
       if (result.success && result.data?.response) {
         // Send AI response to LiveKit room
@@ -158,7 +163,7 @@ function ChatInterface({ roomName, username }: { roomName: string, username: str
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4 h-full space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 max-h-[70vh] space-y-4">
         {chatMessages.length === 0 ? (
           <div className="text-center max-w-2xl m-auto min-h-[54vh] text-muted-foreground py-8">
             <p>No messages yet. Start the conversation!</p>
@@ -168,18 +173,18 @@ function ChatInterface({ roomName, username }: { roomName: string, username: str
             <div
               key={index}
               className={`flex ${
-                msg.from?.identity === 'ai-agent' ? 'justify-start' : 'justify-end'
+                msg.from?.identity === 'system' ? 'justify-start' : 'justify-end'
               }`}
             >
               <div
                 className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  msg.from?.identity === 'ai-agent'
+                  msg.from?.identity === 'system'
                     ? 'bg-muted text-foreground'
-                    : 'bg-primary text-primary-foreground'
+                    : 'bg-[#ccc] text-primary-foreground'
                 }`}
               >
                 <div className="text-xs opacity-70 mb-1">
-                  {msg.from?.identity === 'ai-agent' ? 'AI Agent' : msg.from?.identity}
+                  {msg.from?.identity === 'system' ? 'AI Agent' : msg.from?.identity}
                 </div>
                 <div>{msg.message}</div>
                 <div className="text-xs opacity-70 mt-1">
@@ -191,7 +196,7 @@ function ChatInterface({ roomName, username }: { roomName: string, username: str
         )}
       </div>
       
-      <div className="border-t p-4">
+      <div className="border-t p-4 w-full max-w-2xl z-20 fixed bottom-0">
         <div className="flex gap-2">
           <Input
             value={message}
