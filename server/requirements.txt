@@ -1,3 +1,5 @@
 livekit
 python-dotenv
 livekit-api
+groq
+mem0-py

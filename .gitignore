@@ -3,3 +3,10 @@ server/venv/*
 server/.env
 server/app/__pycache__
 server/app/services/__pycache__
+
+client/node_modules
+client/.next
+client/coverage
+client/package-lock.json
+
+client_x
