@@ -1,9 +1,25 @@
 # app/main.py
 import asyncio
+import os
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+from groq import Groq
+from mem0 import MemoryClient
+from config import *
 from services.livekit_api_service import *
 
 app = Flask(__name__)
+CORS(app)
+
+# Initialize Groq client
+groq_client = Groq(
+    api_key=GROQ_API_KEY
+)
+
+# # Initialize Mem0
+# mem0 = MemoryClient(
+#     api_key=os.environ.get("MEM0_API_KEY"),
+# )
 
 @app.route('/getToken', methods=['POST'])
 def get_token_route():
@@ -119,6 +135,48 @@ def move_participant_route():
     result = asyncio.run(move_participant(room_name, identity, destination_room_name))
     return jsonify(result)
 
+
+@app.route('/chat', methods=['POST'])
+def chat_route():
+    """API endpoint to handle chat messages and generate AI responses."""
+    data = request.get_json()
+    message = data.get('message')
+    username = data.get('username')
+    room_name = data.get('roomName')
+
+    if not all([message, username, room_name]):
+        return jsonify({"error": "message, username, and roomName are required."}), 400
+
+    try:
+        # Retrieve conversation history from mem0
+        history = mem0.get_history(user_id=username)
+
+        # Prepare messages for Groq API
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful AI assistant. Use the conversation history to provide context-aware responses."
+            }
+        ]
+        for entry in history:
+            messages.append({"role": "user", "content": entry["user"]})
+            messages.append({"role": "assistant", "content": entry["agent"]})
+        messages.append({"role": "user", "content": message})
+
+        chat_completion = groq_client.chat.completions.create(
+            messages=messages,
+            model="llama3-8b-8192",
+        )
+
+        ai_response = chat_completion.choices[0].message.content
+
+        # Save the new interaction to mem0
+        # mem0.add(data=f"User: {message}\nAI: {ai_response}", user_id=username)
+
+        return jsonify({"response": ai_response})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
