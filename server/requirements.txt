@@ -1,5 +1,7 @@
 livekit
+flask
 python-dotenv
+flask-cors
 livekit-api
 groq
-mem0-py
+mem0ai

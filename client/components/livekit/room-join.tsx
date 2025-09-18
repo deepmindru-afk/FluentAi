@@ -1,20 +1,41 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/chat'
 import { toast } from 'sonner'
+import { useSearchParams } from 'next/navigation'
+import { useUser } from '@clerk/nextjs'
 
 interface RoomJoinProps {
   onJoin: (roomName: string, username: string) => void
 }
 
 export function RoomJoin({ onJoin }: RoomJoinProps) {
-  const [roomName, setRoomName] = useState('')
+  const searchParams = useSearchParams()
+  
+  const { user } = useUser()
+  const prefilledRoom = searchParams.get('room') || ''
+  
+  const [roomName, setRoomName] = useState(prefilledRoom)
   const [username, setUsername] = useState('')
   const [isJoining, setIsJoining] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      // Use Clerk user's first name, email, or fallback to a generated username
+      const defaultUsername = user.firstName || user.emailAddresses[0]?.emailAddress?.split('@')[0] || `user_${user.id.slice(-6)}`
+      setUsername(defaultUsername)
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (prefilledRoom) {
+      setRoomName(prefilledRoom)
+    }
+  }, [prefilledRoom])
 
   const handleJoin = async () => {
     if (!roomName.trim() || !username.trim()) {
