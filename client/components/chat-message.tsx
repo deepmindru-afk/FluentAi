@@ -1,7 +1,4 @@
-// Inspired by Chatbot-UI and modified to fit the needs of this project
-// @see https://github.com/mckaywrigley/chatbot-ui/blob/main/components/Chat/ChatMessage.tsx
-
-import { Message } from 'ai'
+import { type UIMessage } from '@ai-sdk/react'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 
@@ -12,10 +9,11 @@ import { IconOpenAI, IconUser } from '@/components/ui/icons'
 import { ChatMessageActions } from '@/components/chat-message-actions'
 
 export interface ChatMessageProps {
-  message: Message
+  message: UIMessage
 }
 
 export function ChatMessage({ message, ...props }: ChatMessageProps) {
+  console.log(message)
   return (
     <div
       className={cn('group relative mb-4 flex items-start md:-ml-12')}
@@ -71,7 +69,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
             }
           }}
         >
-          {message.content}
+         {message.parts.map((part) => (part as { text: string }).text ?? '').join(' ')}
         </MemoizedReactMarkdown>
         <ChatMessageActions message={message} />
       </div>

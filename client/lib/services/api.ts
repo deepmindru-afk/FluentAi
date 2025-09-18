@@ -143,6 +143,22 @@ class ApiService {
       body: JSON.stringify({ roomName, identity, trackSid, muted }),
     });
   }
+
+  async checkUsername(roomName: string, username: string): Promise<ApiResponse<{ available: boolean; message: string }>> {
+    console.log('Checking username availability:', username, 'in room:', roomName);
+    return this.request<{ available: boolean; message: string }>('/checkUsername', {
+      method: 'POST',
+      body: JSON.stringify({ roomName, username }),
+    });
+  }
+
+  async joinRoom(roomName: string, username: string): Promise<ApiResponse<{ success: boolean; greeting: string; room: any }>> {
+    console.log('Joining room:', roomName, 'with username:', username);
+    return this.request<{ success: boolean; greeting: string; room: any }>('/joinRoom', {
+      method: 'POST',
+      body: JSON.stringify({ roomName, username }),
+    });
+  }
 }
 
 export const apiService = new ApiService();

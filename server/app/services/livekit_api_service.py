@@ -35,7 +35,7 @@ async def create_room(room_name: str):
         # Use a `CreateRoomRequest` object to specify room options
         room_info = await lkapi.room.create_room(CreateRoomRequest(
             name=room_name,
-            empty_timeout=10 * 60,  # 10 minutes
+            empty_timeout=0,  # 0 means room persists until explicitly deleted
             max_participants=20
         ))
     return room_info

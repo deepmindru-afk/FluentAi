@@ -23,6 +23,22 @@ export function EmptyScreen() {
           Welcome to Fluent AI Chatbot!
         </h1>
       </div>
+      <p className="text-sm text-muted-foreground">
+        Start a conversation by typing a message below.
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Try these examples:
+      </p>
+      <ul className="list-disc pl-6">
+        {exampleMessages.map((example, index) => (
+          <li key={index}>
+            <strong>{example.heading}</strong>: {example.message}
+          </li>
+        ))}
+      </ul>
+      <ExternalLink href="https://github.com/sravanr788/fluent-ai">
+        View on GitHub
+      </ExternalLink>
     </div>
   )
 }
