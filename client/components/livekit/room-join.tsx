@@ -12,9 +12,11 @@ interface RoomJoinProps {
   onJoin: (roomName: string, username: string) => void
   prefilledRoom?: string  // Make this optional
   checkUsername?: boolean  // Add flag to enable/disable username checking
+  rooms?: any[]
+  handleJoinExistingRoom?: (roomName: string) => void
 }
 
-export function RoomJoin({ onJoin, prefilledRoom, checkUsername = false }: RoomJoinProps) {
+export function RoomJoin({ onJoin, prefilledRoom, checkUsername = false, rooms = [], handleJoinExistingRoom = undefined }: RoomJoinProps) {
   const searchParams = useSearchParams()
   const { user } = useUser()
   const roomFromParams = searchParams.get('room') || ''
@@ -107,14 +109,32 @@ export function RoomJoin({ onJoin, prefilledRoom, checkUsername = false }: RoomJ
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 m-auto">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center p-8 m-auto">
+      <Card className="w-full max-w-md p-4">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Join Chat Room</CardTitle>
           <CardDescription>
             Enter a room name and your username to start chatting with the AI agent
           </CardDescription>
         </CardHeader>
+        {/* <Card className="w-full max-w-md mb-6">
+            <CardHeader>
+              <CardTitle>Available Rooms</CardTitle>
+              <CardDescription>Join an existing room or create a new one</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {rooms.map((room) => (
+                <Button
+                  key={room.name}
+                  variant="outline"
+                  className="justify-start"
+                  onClick={() => handleJoinExistingRoom && handleJoinExistingRoom(room.name)}
+                >
+                  {room.name}
+                </Button>
+              ))}
+            </CardContent>
+          </Card> */}
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="roomName">Room Name</Label>

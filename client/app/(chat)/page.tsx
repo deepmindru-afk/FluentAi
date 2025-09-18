@@ -108,37 +108,11 @@ export default function IndexPage() {
     )
   }
 
-  // If we have rooms and want to auto-join the first one (like in your new code)
-  // if (rooms.length > 0 && !currentRoom) {
-  //   handleJoinExistingRoom(rooms[0].name)
-  // }
-
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      {rooms.length > 0 && (
-        <div className="mb-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Rooms</CardTitle>
-              <CardDescription>Join an existing room or create a new one</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rooms.map((room) => (
-                <Button
-                  key={room.name}
-                  variant="outline"
-                  className="justify-start"
-                  onClick={() => handleJoinExistingRoom(room.name)}
-                >
-                  {room.name}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <RoomJoin onJoin={handleJoinRoom} checkUsername={true} />
+      <div>
+        <RoomJoin onJoin={handleJoinRoom} checkUsername={true} rooms={rooms} handleJoinExistingRoom={handleJoinExistingRoom} />
+      </div>
     </div>
   )
 }
