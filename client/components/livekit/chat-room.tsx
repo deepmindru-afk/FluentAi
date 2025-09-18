@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { LiveKitRoom, useChat } from '@livekit/components-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/chat'
 import { apiService } from '@/lib/services/api'
 import { toast } from 'sonner'
+import { Textarea } from '@/components/ui/textarea'
+import { ArrowDown } from 'lucide-react'
+import { useUser } from '@clerk/nextjs'
 
 interface ChatRoomProps {
   roomName: string
@@ -15,9 +17,13 @@ interface ChatRoomProps {
 }
 
 export function ChatRoom({ roomName, username, onLeave }: ChatRoomProps) {
+  const { user } = useUser()
   const [token, setToken] = useState<string>('')
   const [isConnecting, setIsConnecting] = useState(true)
   const [error, setError] = useState<string>('')
+  
+  // Use Clerk user ID for backend integration
+  const effectiveUsername = user?.id || username
 
   useEffect(() => {
     const initializeRoom = async () => {
@@ -30,8 +36,8 @@ export function ChatRoom({ roomName, username, onLeave }: ChatRoomProps) {
           console.log('Room might already exist:', createResult.error)
         }
 
-        // Get token for user
-        const tokenResult = await apiService.getToken(roomName, username)
+        // Get token for user (use Clerk user ID if available)
+        const tokenResult = await apiService.getToken(roomName, effectiveUsername)
         if (!tokenResult.success) {
           throw new Error(tokenResult.error || 'Failed to get token')
         }
@@ -90,7 +96,7 @@ export function ChatRoom({ roomName, username, onLeave }: ChatRoomProps) {
   }
 
   return (
-    <div className=" h-screen flex flex-col w-full max-w-2xl m-auto">
+    <div className=" h-screen flex flex-col w-full md:max-w-2xl m-auto space-y-[20%]">
       <div className="bg-background border-b p-4 flex justify-between items-center">
         <div>
           <h2 className="text-lg font-semibold">Room: {roomName}</h2>
@@ -109,40 +115,42 @@ export function ChatRoom({ roomName, username, onLeave }: ChatRoomProps) {
           video={false}
           audio={false}
         >
-          <ChatInterface roomName={roomName} username={username} />
+          <ChatInterface roomName={roomName} username={effectiveUsername} displayName={username} />
         </LiveKitRoom>
       </div>
     </div>
   )
 }
 
-function ChatInterface({ roomName, username }: { roomName: string, username: string }) {
+function ChatInterface({ roomName, username, displayName }: { roomName: string, username: string, displayName?: string }) {
   const { send, chatMessages, isSending } = useChat()
   const [message, setMessage] = useState('')
   const [isSendingApi, setIsSendingApi] = useState(false)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   const handleSendMessage = async () => {
     if (!message.trim() || isSending) return
-    
+
     const userMessage = message.trim()
     setMessage('')
 
-    // Send user message to LiveKit
     await send(userMessage)
 
-    // Send message to backend and get AI response
     setIsSendingApi(true)
     try {
-      const result = await apiService.sendMessage(roomName, username, userMessage)
-
+      const chatMessagesForAPI = chatMessages.map(msg => ({
+        role: msg.from?.identity === username ? 'user' : 'assistant',
+        content: msg.message,
+      }))
+      const result = await apiService.sendMessage(roomName, username, userMessage, chatMessagesForAPI)
       if (result.success && result.data?.response) {
-        // Send AI response to LiveKit room
-        await send(result.data.response);
-
+        await send(`[AI]: ${result.data.response}`)
       } else {
         toast.error(result.error || 'Failed to get AI response')
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred while sending the message')
     } finally {
       setIsSendingApi(false)
@@ -156,54 +164,96 @@ function ChatInterface({ roomName, username }: { roomName: string, username: str
     }
   }
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
+
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4 h-full space-y-4">
+      {/* Chat messages scrollable area */}
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4 space-y-[50%]"
+      >
         {chatMessages.length === 0 ? (
-          <div className="text-center max-w-2xl m-auto min-h-[54vh] text-muted-foreground py-8">
+          <div className="text-center text-muted-foreground py-8">
             <p>No messages yet. Start the conversation!</p>
           </div>
         ) : (
-          chatMessages.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                msg.from?.identity === 'ai-agent' ? 'justify-start' : 'justify-end'
-              }`}
-            >
+          chatMessages.map((msg, index) => {
+            const isAIMessage = msg.message.startsWith('[AI]:') || msg.from?.identity === 'system'
+            const isCurrentUser = msg.from?.identity === username && !isAIMessage
+            const displayMessage = isAIMessage ? msg.message.replace('[AI]:', '').trim() : msg.message
+
+            return (
               <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  msg.from?.identity === 'ai-agent'
-                    ? 'bg-muted text-foreground'
-                    : 'bg-primary text-primary-foreground'
-                }`}
+                key={index}
+                className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="text-xs opacity-70 mb-1">
-                  {msg.from?.identity === 'ai-agent' ? 'AI Agent' : msg.from?.identity}
-                </div>
-                <div>{msg.message}</div>
-                <div className="text-xs opacity-70 mt-1">
-                  {new Date(msg.timestamp).toLocaleTimeString()}
+                <div
+                  className={`flex ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'} items-start gap-2`}
+                >
+                  <div
+                    className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
+                      isCurrentUser
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gradient-to-br from-purple-500 to-pink-500 text-white'
+                    }`}
+                  >
+                    {isCurrentUser ? msg.from?.identity?.charAt(0).toUpperCase() : 'AI'}
+                  </div>
+                  <div
+                    className={`px-4 py-2 rounded-2xl shadow-sm ${
+                      isCurrentUser
+                        ? 'bg-blue-500 text-white rounded-br-md'
+                        : 'bg-gray-100 dark:bg-gray-800 text-foreground rounded-bl-md border'
+                    }`}
+                  >
+                    <div
+                      className={`text-xs font-medium mb-1 ${
+                        isCurrentUser ? 'text-blue-100 text-right' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {isCurrentUser ? 'You' : 'AI Assistant'}
+                    </div>
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {displayMessage}
+                    </div>
+                    <div
+                      className={`text-xs mt-1 ${
+                        isCurrentUser ? 'text-blue-100' : 'text-muted-foreground text-right'
+                      }`}
+                    >
+                      {new Date(msg.timestamp).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            )
+          })
         )}
+        <div ref={messagesEndRef} className="mb-[10px]" />
       </div>
-      
-      <div className="border-t p-4">
+
+      {/* Bottom input bar (fixed at bottom) */}
+      <div className="border-t p-4 bg-background shrink-0">
         <div className="flex gap-2">
-          <Input
+          <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type your message..."
+            onKeyDown={handleKeyPress}
+            placeholder="Type your message... (Shift+Enter for new line)"
             disabled={isSending || isSendingApi}
-            className="flex-1"
+            className="flex-1 min-h-[40px] max-h-[120px] resize-none"
+            rows={1}
           />
-          <Button 
-            onClick={handleSendMessage} 
+          <Button
+            onClick={handleSendMessage}
             disabled={!message.trim() || isSending || isSendingApi}
+            className="self-end"
           >
             {isSending || isSendingApi ? 'Sending...' : 'Send'}
           </Button>
@@ -212,3 +262,4 @@ function ChatInterface({ roomName, username }: { roomName: string, username: str
     </div>
   )
 }
+

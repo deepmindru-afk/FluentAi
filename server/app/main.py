@@ -1,6 +1,7 @@
 # app/main.py
 import asyncio
 import os
+from sys import version
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from groq import Groq
@@ -16,10 +17,9 @@ groq_client = Groq(
     api_key=GROQ_API_KEY
 )
 
-# # Initialize Mem0
-# mem0 = MemoryClient(
-#     api_key=os.environ.get("MEM0_API_KEY"),
-# )
+# Initialize Mem0
+os.environ["MEM0_API_KEY"] = MEM0_API_KEY
+mem0 = MemoryClient()
 
 @app.route('/getToken', methods=['POST'])
 def get_token_route():
@@ -143,35 +143,101 @@ def chat_route():
     message = data.get('message')
     username = data.get('username')
     room_name = data.get('roomName')
+    chat_messages = data.get('chatMessages' , [])
 
     if not all([message, username, room_name]):
         return jsonify({"error": "message, username, and roomName are required."}), 400
 
     try:
+        # Create a unique user identifier that includes room context
+        user_room_id = f"{username}_{room_name}"
+        
         # Retrieve conversation history from mem0
-        history = mem0.get_history(user_id=username)
+        try:
+            # Search for both room-specific and general user memories
+            query = message
+            
+            # First, try to get room-specific memories
+            room_filters = {
+                "AND": [
+                    {
+                        "user_id": user_room_id
+                    }
+                ]
+            }
+            room_memory_context = mem0.search(query=query, version="v2", filters=room_filters, limit=5)
+            
+            # Also get general user memories
+            user_filters = {
+                "AND": [
+                    {
+                        "user_id": username
+                    }
+                ]
+            }
+            user_memory_context = mem0.search(query=query, version="v2", filters=user_filters, limit=3)
+            
+            # Combine both contexts
+            memory_context = room_memory_context + user_memory_context
+            print(f"Retrieved {len(room_memory_context)} room memories and {len(user_memory_context)} user memories for {username} in {room_name}")
+            
+        except Exception as mem_error:
+            print(f"Memory retrieval error: {mem_error}")
+            memory_context = []
 
-        # Prepare messages for Groq API
+        # Prepare messages for Groq API with memory context
+        system_content = "You are a helpful AI assistant. Use the conversation history and memory context to provide personalized, context-aware responses."
+        
+        # Add memory context to system message if available
+        if memory_context:
+            # Sort memories by relevance score if available
+            sorted_memories = sorted(memory_context, key=lambda x: x.get('score', 0), reverse=True)
+            memory_texts = []
+            
+            for mem in sorted_memories[:5]:  # Limit to top 5 most relevant memories
+                if mem.get('text'):
+                    memory_texts.append(mem['text'])
+            
+            if memory_texts:
+                memory_text = "\n".join(memory_texts)
+                system_content += f"\n\nRelevant conversation history and context:\n{memory_text}"
+
         messages = [
             {
                 "role": "system",
-                "content": "You are a helpful AI assistant. Use the conversation history to provide context-aware responses."
+                "content": system_content
             }
         ]
-        for entry in history:
-            messages.append({"role": "user", "content": entry["user"]})
-            messages.append({"role": "assistant", "content": entry["agent"]})
+        
+        # Add recent chat history (limit to last 10 messages to avoid token limits)
+        recent_messages = chat_messages[-10:] if len(chat_messages) > 10 else chat_messages
+        for entry in recent_messages:
+            messages.append({"role": entry["role"], "content": entry["content"]})
+        
         messages.append({"role": "user", "content": message})
 
         chat_completion = groq_client.chat.completions.create(
             messages=messages,
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant"
         )
 
         ai_response = chat_completion.choices[0].message.content
 
-        # Save the new interaction to mem0
-        # mem0.add(data=f"User: {message}\nAI: {ai_response}", user_id=username)
+        # Save the new interaction to mem0 with both room-specific and general user context
+        try:
+            interaction_data = f"In room '{room_name}' - User ({username}): {message}\nAI Assistant: {ai_response}"
+            
+            # Save to room-specific memory
+            mem0.add(data=interaction_data, user_id=user_room_id)
+            print(f"Saved room-specific interaction to memory for user {username} in room {room_name}")
+            
+            # Also save a general version for cross-room context
+            general_data = f"User ({username}): {message}\nAI Assistant: {ai_response}"
+            mem0.add(data=general_data, user_id=username)
+            print(f"Saved general interaction to memory for user {username}")
+            
+        except Exception as mem_error:
+            print(f"Memory storage error: {mem_error}")
 
         return jsonify({"response": ai_response})
 

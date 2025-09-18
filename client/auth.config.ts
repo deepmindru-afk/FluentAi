@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from 'next-auth'
+import { getUser } from './app/login/actions'
 
 export const authConfig = {
   secret: process.env.AUTH_SECRET,
