@@ -1,13 +1,13 @@
 # FluentAI - Intelligent Chat Application
 
-A modern, full-stack chat application with AI integration, real-time communication, and persistent memory using NextAuth.js, LiveKit, Groq, and Mem0.
+A modern, full-stack chat application with AI integration, real-time communication, and persistent memory using Clerk, LiveKit, Groq, and Mem0.
 
 ## Features
 
 ### 🔐 Authentication
 - **Google OAuth Integration**: Seamless sign-in with Google accounts
 - **Email/Password Authentication**: Traditional credential-based login
-- **NextAuth.js v5**: Latest authentication framework with session management
+- **Clerk**: Latest authentication framework with session management
 
 ### 💬 Real-time Chat
 - **LiveKit Integration**: Real-time messaging with WebRTC
@@ -32,7 +32,7 @@ A modern, full-stack chat application with AI integration, real-time communicati
 - **Next.js 14**: React framework with App Router
 - **TypeScript**: Type-safe development
 - **Tailwind CSS**: Utility-first styling
-- **NextAuth.js**: Authentication
+- **Clerk**: Authentication
 - **LiveKit React**: Real-time communication components
 - **Lucide React**: Modern icon library
 
@@ -47,10 +47,10 @@ A modern, full-stack chat application with AI integration, real-time communicati
 ### Prerequisites
 - Node.js 18+ and npm/pnpm
 - Python 3.8+
-- Google OAuth credentials
+- Clerk account
+- LiveKit Cloud account or self-hosted LiveKit server
 - Groq API key
 - Mem0 API key
-- LiveKit server (cloud or self-hosted)
 
 ### 1. Clone the Repository
 ```bash
@@ -73,10 +73,8 @@ cp .env.example .env.local
 
 Edit `.env.local` with your configuration:
 ```env
-AUTH_SECRET=your-super-secret-auth-key
-NEXTAUTH_URL=http://localhost:3000
-GOOGLE_CLIENT_ID=your-google-oauth-client-id
-GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 NEXT_PUBLIC_LIVEKIT_URL=wss://your-livekit-server-url
 ```
@@ -84,6 +82,8 @@ NEXT_PUBLIC_LIVEKIT_URL=wss://your-livekit-server-url
 ### 3. Backend Setup
 ```bash
 cd server
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -101,20 +101,12 @@ LIVEKIT_API_SECRET=your-livekit-api-secret
 LIVEKIT_URL=wss://your-livekit-server-url
 ```
 
-### 4. Google OAuth Setup
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials
-5. Add authorized redirect URIs:
-   - `http://localhost:3000/api/auth/callback/google`
-   - Add production URLs when deploying
-
-### 5. Run the Application
+### 4. Run the Application
 
 Start the backend server:
 ```bash
 cd server
+venv\Scripts\activate
 python app/main.py
 ```
 
@@ -127,21 +119,6 @@ pnpm dev
 ```
 
 Visit `http://localhost:3000` to access the application.
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/signin` - Sign in with credentials
-- `GET /api/auth/callback/google` - Google OAuth callback
-
-### Chat & Rooms
-- `POST /getToken` - Get LiveKit access token
-- `POST /createRoom` - Create a new chat room
-- `GET /listRooms` - List all active rooms
-- `POST /deleteRoom` - Delete a room
-- `POST /listParticipants` - List room participants
-- `POST /removeParticipant` - Remove participant from room
-- `POST /chat` - Send message and get AI response
 
 ## Usage
 
