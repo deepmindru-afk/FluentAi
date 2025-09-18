@@ -1,0 +1,73 @@
+Hi , I want you to implement these below things 
+
+mem0 is not able to add memory, but its able to search through the memories identify what is missing for this 
+
+Right now the room join component does not have separate route for itself so , prefilled roomname through room list is not working as we are using urlparams for this , either we should change this or add a separate route for room but I don't know whaat we will show in the home route. Its upto u 
+
+U have misunderstood my requirement I just wanted basic app with the below details , u have given rooms and participants and all , these can be added as extra features lets get into them later but first I want these all to be working perfectly 
+
+1. User Flow
+Here’s how a user interacts with your system:
+
+
+User Joins a LiveKit Room
+
+User enters a username and joins a LiveKit room via the Next.js frontend.
+The AI agent automatically joins the room as a participant.
+
+
+
+AI Agent Greets the User
+
+The agent sends a welcome message (e.g., "Hello, [username]! How can I help you today?").
+
+
+
+User Sends a Message
+
+The user types a message in the chat (e.g., "What was the book you recommended last time?").
+
+
+
+Agent Queries Memory for Context
+
+The agent sends the user’s message to the memory/RAG service (e.g., mem0) to retrieve relevant past interactions.
+The memory service returns contextual data (e.g., "Last time, I recommended 'Atomic Habits' to this user.").
+
+
+
+Agent Generates a Personalized Response
+
+The agent combines the current message and retrieved memory, then queries the LLM API (e.g., OpenAI) to generate a response.
+The agent sends the response back to the LiveKit room (e.g., "Last time, I recommended 'Atomic Habits' by James Clear. Did you get a chance to read it?").
+
+
+
+Chat Continues with Context
+
+The agent remembers the conversation and updates the memory store for future interactions.
+
+
+Agent Logic Flow:
+
+User sends a message → Agent receives it via LiveKit.
+Agent queries memory service for context.
+Agent sends combined context + message to LLM.
+LLM generates a response → Agent sends it back to the LiveKit room.
+
+LiveKit handles real-time chat.
+mem0/Weaviate stores and retrieves user context.
+LLM API generates responses.
+Next.js provides the UI.
+
+-- I don't know what's happening while we leave a room like its getting removed from the roomlist and check why am I not able to see the participants list therer is some error in there check , if a room is created shouldn't it stay in our website unless we delete it explicitly and other participants should be able to join that same room right 
+When we join the previous rooms according to our requirements we need that livekit agent to have context of the previous chats in that particular room , 
+
+-- every username must be unique and validated before a room is created for a new user 
+-- at last  in the current client go through all the components present and check if they are used anywhere and remove the unwanted or unused components . 
+ONly after implementing the basic requirements we needed , try to improve the side bar the new chat option is working or not , there are some components which need removeChat , shareChat etc from actions which we have deleted try if we can create those to ensure all components are working as intended , 
+I don't know because the mem0 is not able to access the memories or thats the reason why i can't see chats in the sidebar or rooms and particpants list or do we need any database for thise if yes you can integrate any one suitable for this case like supabase or mongodb
+
+
+
+

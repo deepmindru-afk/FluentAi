@@ -5,7 +5,7 @@ import Textarea from 'react-textarea-autosize'
 
 import { useActions, useUIState } from '@ai-sdk/rsc'
 
-import { UserMessage } from './stocks/message'
+import { UserMessage } from './user-message'
 import { type AI } from '@/lib/chat/actions'
 import { Button } from '@/components/ui/button'
 import { IconArrowElbow, IconPlus } from '@/components/ui/icons'
@@ -20,7 +20,6 @@ import { useRouter } from 'next/navigation'
 import {
   useRoomContext,
   useChat,
-  useConnectionState
 } from '@livekit/components-react'
 
 export function PromptForm({
