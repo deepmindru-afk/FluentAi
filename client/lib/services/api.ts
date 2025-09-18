@@ -13,6 +13,9 @@ export interface GetTokenRequest {
 export interface RoomInfo {
   name: string;
   sid: string;
+  num_participants?: number;
+  creation_time?: number;
+  max_participants?: number;
 }
 
 export interface TokenResponse {
@@ -114,6 +117,30 @@ class ApiService {
     return this.request<ChatResponse>('/chat', {
       method: 'POST',
       body: JSON.stringify({ roomName, username, message, chatMessages }),
+    });
+  }
+
+  async moveParticipant(roomName: string, identity: string, destinationRoomName: string): Promise<ApiResponse<any>> {
+    console.log('Moving participant:', identity, 'from room:', roomName, 'to room:', destinationRoomName);
+    return this.request('/moveParticipant', {
+      method: 'POST',
+      body: JSON.stringify({ roomName, identity, destinationRoomName }),
+    });
+  }
+
+  async updateParticipant(roomName: string, identity: string, metadata?: any, permissions?: any): Promise<ApiResponse<any>> {
+    console.log('Updating participant:', identity, 'in room:', roomName);
+    return this.request('/updateParticipant', {
+      method: 'POST',
+      body: JSON.stringify({ roomName, identity, metadata, permissions }),
+    });
+  }
+
+  async muteTrack(roomName: string, identity: string, trackSid: string, muted: boolean): Promise<ApiResponse<any>> {
+    console.log('Muting track:', trackSid, 'for participant:', identity, 'in room:', roomName, 'muted:', muted);
+    return this.request('/muteTrack', {
+      method: 'POST',
+      body: JSON.stringify({ roomName, identity, trackSid, muted }),
     });
   }
 }
