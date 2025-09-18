@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { apiService } from '@/lib/services/api'
 import { toast } from 'sonner'
 import { ChatRoom } from '@/components/livekit/chat-room'
+import { useUser } from '@clerk/nextjs'
 
 export default function IndexPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user, isLoaded } = useUser()
   const [rooms, setRooms] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentRoom, setCurrentRoom] = useState<{
@@ -47,6 +49,13 @@ export default function IndexPage() {
   }
 
   const handleJoinRoom = (roomName: string, username: string) => {
+    // Check if user is authenticated
+    if (!isLoaded || !user) {
+      toast.error('Please sign in to join a chat room')
+      router.push('/login')
+      return
+    }
+    
     // Update URL with room and username params
     router.push(`/?room=${encodeURIComponent(roomName)}&username=${encodeURIComponent(username)}`)
     setCurrentRoom({ roomName, username })
@@ -59,10 +68,33 @@ export default function IndexPage() {
   }
 
   const handleJoinExistingRoom = (roomName: string) => {
-    // For existing rooms, we might want to use a default username
-    const defaultUsername = 'guest_' + Math.floor(Math.random() * 1000)
+    // Check if user is authenticated
+    if (!isLoaded || !user) {
+      toast.error('Please sign in to join a chat room')
+      router.push('/login')
+      return
+    }
+    
+    // Use authenticated user's info for username
+    const defaultUsername = user.firstName || user.emailAddresses[0]?.emailAddress?.split('@')[0] || `user_${user.id.slice(-6)}`
     router.push(`/?room=${encodeURIComponent(roomName)}&username=${encodeURIComponent(defaultUsername)}`)
     setCurrentRoom({ roomName, username: defaultUsername })
+  }
+
+  // Show loading state while checking authentication
+  if (!isLoaded) {
+    return (
+      <div className="container mx-auto p-4 max-w-4xl">
+        <Card className="w-full max-w-2xl mx-auto mt-16">
+          <CardContent className="flex items-center justify-center p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Loading...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   // If we have a current room, show the chat room

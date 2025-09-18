@@ -18,12 +18,16 @@ limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"]
 )
+
+# Rate limit error handler
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return jsonify({"error": "Rate limit exceeded. Please try again later."}), 429
+
 # Initialize Groq client
 groq_client = Groq(
     api_key=GROQ_API_KEY
 )
-
-print(f"MEM0_API_KEY: {MEM0_API_KEY}, MEMO_ORG_ID: {MEMO_ORG_ID}, MEMO_PROJECT_ID: {MEMO_PROJECT_ID}")
 
 if MEM0_API_KEY and MEMO_ORG_ID and MEMO_PROJECT_ID:
     try:
@@ -192,7 +196,7 @@ def join_room_route():
         
         # Check if this user has previous context in this room
         user_room_id = f"{username}_{room_name}"
-        greeting_message = f"Hello {username}! Welcome to {room_name}."
+        greeting_message = f"Hello! Welcome to {room_name}."
         
         if mem0:
             try:
@@ -204,7 +208,7 @@ def join_room_route():
                     limit=3
                 )                
                 if room_memories:
-                    greeting_message = f"Welcome back to {room_name}, {username}! I remember our previous conversations. How can I help you today?"
+                    greeting_message = f"Welcome back to {room_name}! I remember our previous conversations. How can I help you today?"
                 else:
                     # Check for general user memories
                     user_memories = mem0.search(
@@ -214,7 +218,7 @@ def join_room_route():
                         limit=2
                     )
                     if user_memories:
-                        greeting_message = f"Hello {username}! Welcome to {room_name}. I remember you from our previous chats. How can I assist you today?"
+                        greeting_message = f"Hello! Welcome to {room_name}. I remember you from our previous chats. How can I assist you today?"
                 
             except Exception as mem_error:
                 print(f"Memory retrieval error during greeting: {mem_error}")
@@ -282,35 +286,41 @@ def chat_route():
             print("Mem0 client not available, proceeding without memory context")
 
         # Prepare messages for Groq API with memory context
-        system_content = "You are a helpful AI assistant. Use the conversation history and memory context to provide personalized, context-aware responses."
-        
-        # Add memory context if available
-        if memory_context:
-            # Sort memories by relevance score
-            sorted_memories = sorted(memory_context, key=lambda x: x.get('score', 0), reverse=True)
-            memory_texts = []
-            
-            for mem in sorted_memories[:5]:  # Limit to top 5 most relevant memories
-                if mem.get('text'):
-                    memory_texts.append(mem['text'])
-            
-            if memory_texts:
-                memory_text = "\n".join(memory_texts)
-                system_content += f"\n\nRelevant conversation history and context:\n{memory_text}"
-
         messages = [
             {
                 "role": "system",
-                "content": system_content
+                "content": "You are a helpful AI assistant. Use the provided context to give personalized, context-aware responses."
             }
         ]
-        
+
+        # Add memory context if available
+        if memory_context and len(memory_context) > 0:
+            print("First memory:", memory_context[0])  # Inspect the structure
+            sorted_memories = sorted(memory_context, key=lambda x: x.get('score', 0), reverse=True)
+            memory_texts = []
+            for mem in sorted_memories[:5]:
+                print("Memory:", mem)  # Inspect each memory
+                if mem.get('memory') and mem.get('score', 0) > 0.5:
+                    memory_texts.append(f"Previous Conversation: {mem['memory']}")
+            if memory_texts:
+                memory_text = "\n\n".join(memory_texts)
+                messages.append({
+                    "role": "user",
+                    "content": f"Relevant context from previous conversations:\n{memory_text}"
+                })
+            else:
+                print("No memories met the relevance threshold.")
+
         # Add recent chat history (limit to last 10 messages to avoid token limits)
         recent_messages = chat_messages[-10:] if len(chat_messages) > 10 else chat_messages
         for entry in recent_messages:
             messages.append({"role": entry["role"], "content": entry["content"]})
-        
+
         messages.append({"role": "user", "content": message})
+
+        print("Final prompt to LLM:")
+        for msg in messages:
+            print(f"{msg['role']}: {msg['content'][:200]}...")
 
         chat_completion = groq_client.chat.completions.create(
             messages=messages,
@@ -327,12 +337,27 @@ def chat_route():
         # Save the new interaction to mem0 with both room-specific and general user context
         if mem0:
             try:                
-                # Save to room-specific memory
-                messages = conversation_history
-                mem0.add(messages, user_id=user_room_id, version="v2")
+                # Save to room-specific memory with metadata
+                room_messages = conversation_history.copy()
+                mem0.add(
+                    room_messages, 
+                    user_id=user_room_id,
+                    metadata={"room": room_name, "username": username, "type": "room_conversation"},
+                    async_mode=True, 
+                    version="v2"
+                )
                 
                 # Also save a general version for cross-room context
-                mem0.add(messages, user_id=username, version="v2")
+                general_messages = conversation_history.copy()
+                mem0.add(
+                    general_messages, 
+                    user_id=username,
+                    metadata={"username": username, "type": "general_conversation"},
+                    async_mode=True, 
+                    version="v2"
+                )
+                
+                print(f"Successfully stored conversation to memory for user {username} in room {room_name}")
                 
             except Exception as mem_error:
                 print(f"Memory storage error: {mem_error}")

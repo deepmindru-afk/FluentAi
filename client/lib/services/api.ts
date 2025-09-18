@@ -48,9 +48,20 @@ class ApiService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        let errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        
+        // Handle specific error cases
+        if (response.status === 429) {
+          errorMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
+        } else if (response.status >= 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (response.status === 0 || !response.status) {
+          errorMessage = 'Connection failed. Please check your internet connection.';
+        }
+        
         return {
           success: false,
-          error: errorData.error || `HTTP ${response.status}: ${response.statusText}`,
+          error: errorMessage,
         };
       }
 
@@ -60,9 +71,21 @@ class ApiService {
         data,
       };
     } catch (error) {
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error instanceof Error) {
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          errorMessage = 'Connection failed. Please check your internet connection.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = 'Request timed out. Please try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: errorMessage,
       };
     }
   }

@@ -39,7 +39,9 @@ export function ChatRoom({ roomName, username, onLeave }: ChatRoomProps) {
 
         const tokenResult = await apiService.getToken(roomName, effectiveUsername)
         if (!tokenResult.success) {
-          throw new Error(tokenResult.error || 'Failed to get token')
+          const errorMsg = tokenResult.error || 'Failed to get token'
+          toast.error(errorMsg)
+          throw new Error(errorMsg)
         }
         setToken(tokenResult.data!.token)
         setError('')
@@ -123,6 +125,7 @@ function ChatRoomContent({ roomName, username, displayName, onLeave }: {
   const [message, setMessage] = useState('')
   const [isSendingApi, setIsSendingApi] = useState(false)
   const [showScrollButton, setShowScrollButton] = useState(false)
+  const [isAiThinking, setIsAiThinking] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -133,7 +136,11 @@ function ChatRoomContent({ roomName, username, displayName, onLeave }: {
     const userMessage = message.trim()
     setMessage('')
     await send(userMessage)
+    
+    // Show AI thinking indicator
+    setIsAiThinking(true)
     setIsSendingApi(true)
+    
     try {
       const chatMessagesForAPI = chatMessages.map(msg => ({
         role: msg.from?.identity === username ? 'user' : 'assistant',
@@ -145,9 +152,11 @@ function ChatRoomContent({ roomName, username, displayName, onLeave }: {
       } else {
         toast.error(result.error || 'Failed to get AI response')
       }
-    } catch {
+    } catch (error) {
+      console.error('Error sending message:', error)
       toast.error('An error occurred while sending the message')
     } finally {
+      setIsAiThinking(false)
       setIsSendingApi(false)
     }
   }
@@ -275,6 +284,31 @@ function ChatRoomContent({ roomName, username, displayName, onLeave }: {
             )
           })
         )}
+        
+        {/* AI Thinking Indicator */}
+        {isAiThinking && (
+          <div className="flex justify-start">
+            <div className="flex flex-row items-start gap-2 max-w-[85%]">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                AI
+              </div>
+              <div className="px-4 py-2 rounded-2xl shadow-sm bg-gray-100 dark:bg-gray-800 text-foreground rounded-bl-md border">
+                <div className="text-xs font-medium mb-1 text-muted-foreground">
+                  AI Assistant
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                  <span className="text-muted-foreground">AI is thinking...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
 
