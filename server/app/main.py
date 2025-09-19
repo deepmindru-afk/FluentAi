@@ -1,7 +1,5 @@
 # app/main.py
 import asyncio
-import os
-from sys import version
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_limiter import Limiter

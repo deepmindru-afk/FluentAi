@@ -3,8 +3,33 @@ server/venv/*
 server/.env
 server/app/__pycache__
 server/app/services/__pycache__
+server/.vercel
+server/.vscode
+server/.env*.local
 
 client/node_modules
 client/.next
 client/coverage
 client/package-lock.json
+
+client/out/
+client/build
+
+# debug
+client/npm-debug.log*
+client/yarn-debug.log*
+client/yarn-error.log*
+client/.pnpm-debug.log*
+
+# local env files
+client/.env
+client/.env.local
+
+# turbo
+client/.turbo
+
+client/.vercel
+client/.vscode
+client/.env*.local
+
+client/.clerk/

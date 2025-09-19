@@ -96,6 +96,8 @@ Edit `.env` with your configuration:
 ```env
 GROQ_API_KEY=your-groq-api-key
 MEM0_API_KEY=your-mem0-api-key
+MEMO_ORG_ID=your-mem0-org-id
+MEMO_PROJECT_ID=your-mem0-project-id
 LIVEKIT_API_KEY=your-livekit-api-key
 LIVEKIT_API_SECRET=your-livekit-api-secret
 LIVEKIT_URL=wss://your-livekit-server-url
@@ -150,18 +152,27 @@ The application uses Mem0 for persistent memory:
 
 ## Deployment
 
-### Frontend (Vercel)
+### Live Deployment
+
+✅ **Frontend**: 
+- **URL**: [Deployed_link](https://fluent-ai-one.vercel.app/)
+
+✅ **Backend**:
+- **URL**: [https://fluentai-server.vercel.app/](https://fluentai-server.vercel.app/)
+- **Health Check**: [https://fluentai-server.vercel.app/health](https://fluentai-server.vercel.app/health)
+
+### Deployment Instructions
+
+#### Frontend Deployment (Vercel)
 ```bash
 cd client
-npm run build
-# Deploy to Vercel or your preferred platform
+vercel --prod
 ```
 
-### Backend (Railway/Heroku)
+#### Backend Deployment (Vercel)
 ```bash
 cd server
-# Configure production environment variables
-# Deploy to Railway, Heroku, or your preferred platform
+vercel --prod
 ```
 
 ## Contributing
