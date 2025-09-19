@@ -1,5 +1,6 @@
 ﻿aiofiles==24.1.0
 livekit
+livekit-api
 #==1.0.13
 numpy==2.1.1
 prometheus_client==0.22.1
@@ -23,3 +24,4 @@ groq
 gunicorn
 
 mem0ai
+
