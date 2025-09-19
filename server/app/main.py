@@ -5,7 +5,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from groq import Groq
-from mem0 import MemoryClient
+#from mem0 import MemoryClient
 from app.config import *
 from app.services.livekit_api_service import *
 
@@ -26,7 +26,7 @@ def ratelimit_handler(e):
 groq_client = Groq(
     api_key=GROQ_API_KEY
 )
-
+'''
 if MEM0_API_KEY and MEMO_ORG_ID and MEMO_PROJECT_ID:
     try:
         mem0 = MemoryClient(api_key=MEM0_API_KEY,org_id=MEMO_ORG_ID,project_id=MEMO_PROJECT_ID)
@@ -37,7 +37,8 @@ if MEM0_API_KEY and MEMO_ORG_ID and MEMO_PROJECT_ID:
 else:
     print("Missing Mem0 environment variables")
     mem0 = None
-
+'''
+mem0=None
 @app.route('/getToken', methods=['POST'])
 def get_token_route():
     """API endpoint to generate and return a LiveKit access token."""
