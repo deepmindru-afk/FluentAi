@@ -168,7 +168,7 @@ export function RoomJoin({ onJoin, prefilledRoom, checkUsername = false, rooms =
           >
             {isJoining ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full size-4 border-b-2 border-white mr-2"></div>
                 Joining...
               </>
             ) : (

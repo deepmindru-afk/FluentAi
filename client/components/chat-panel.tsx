@@ -8,7 +8,6 @@ import { IconShare } from '@/components/ui/icons'
 import { FooterText } from '@/components/footer'
 import { ChatShareDialog } from '@/components/chat-share-dialog'
 import { useAIState, useActions, useUIState } from "@ai-sdk/rsc"
-import type { AI } from '@/lib/chat/actions'
 import { nanoid } from 'nanoid'
 import { UserMessage } from './user-message'
 
@@ -30,7 +29,7 @@ export function ChatPanel({
   scrollToBottom
 }: ChatPanelProps) {
   const [aiState] = useAIState()
-  const [messages, setMessages] = useUIState<typeof AI>()
+  const [messages, setMessages] = useUIState()
   const { submitUserMessage } = useActions()
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false)
 
@@ -74,7 +73,7 @@ export function ChatPanel({
                   index > 1 && 'hidden md:block'
                 }`}
                 onClick={async () => {
-                  setMessages((currentMessages: typeof AI) => [
+                  setMessages((currentMessages: any) => [
                     ...currentMessages,
                     {
                       id: nanoid(),
@@ -86,7 +85,7 @@ export function ChatPanel({
                     example.message
                   )
 
-                  setMessages((currentMessages: typeof AI) => [
+                  setMessages((currentMessages:any) => [
                     ...currentMessages,
                     responseMessage
                   ])

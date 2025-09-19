@@ -6,7 +6,6 @@ import Textarea from 'react-textarea-autosize'
 import { useActions, useUIState } from '@ai-sdk/rsc'
 
 import { UserMessage } from './user-message'
-import { type AI } from '@/lib/chat/actions'
 import { Button } from '@/components/ui/button'
 import { IconArrowElbow, IconPlus } from '@/components/ui/icons'
 import {
@@ -35,7 +34,7 @@ export function PromptForm({
   //const { submitUserMessage } = useActions()
   const room = useRoomContext()
   const chat = useChat()
-  const [_, setMessages] = useUIState<typeof AI>()
+  const [_, setMessages] = useUIState()
 
   const submitUserMessage = async (value: string) => {
     await chat.send!(value)
@@ -63,7 +62,7 @@ export function PromptForm({
         if (!value) return
 
         // Optimistically add user message UI
-        setMessages((currentMessages: typeof AI) => [
+        setMessages((currentMessages: any) => [
           ...currentMessages,
           {
             id: nanoid(),

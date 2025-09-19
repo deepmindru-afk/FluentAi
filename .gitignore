@@ -8,5 +8,3 @@ client/node_modules
 client/.next
 client/coverage
 client/package-lock.json
-
-client_x

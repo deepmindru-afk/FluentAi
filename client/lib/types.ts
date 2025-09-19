@@ -1,4 +1,4 @@
-import { Message } from 'ai'
+import { UIMessage } from '@ai-sdk/react'
 
 export interface Chat extends Record<string, any> {
   id: string
@@ -6,7 +6,7 @@ export interface Chat extends Record<string, any> {
   createdAt: Date
   userId: string
   path: string
-  messages: Message[]
+  messages: UIMessage[]
   sharePath?: string
 }
 

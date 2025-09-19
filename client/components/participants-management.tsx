@@ -195,7 +195,7 @@ export default function ParticipantsManagement() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Participants in "{selectedRoom}"</span>
+              <span>Participants in &quot;{selectedRoom}&quot;</span>
               <span className="text-sm font-normal text-muted-foreground">
                 {participants.length} participant{participants.length !== 1 ? 's' : ''}
               </span>
@@ -270,7 +270,7 @@ export default function ParticipantsManagement() {
                           <DialogHeader>
                             <DialogTitle>Move Participant</DialogTitle>
                             <DialogDescription>
-                              Move "{participant.identity}" to another room.
+                              Move &quot;{participant.identity}&quot; to another room.
                             </DialogDescription>
                           </DialogHeader>
                           <div className="space-y-4 py-4">
