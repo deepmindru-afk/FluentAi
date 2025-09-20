@@ -1,7 +1,6 @@
-# app/services/livekit_api_service.py
 import os
 import json
-from livekit import api
+import livekit.api as api
 from livekit.api import (
     CreateRoomRequest,
     DeleteRoomRequest,
@@ -31,25 +30,26 @@ async def generate_token(room_name: str, identity: str) -> str:
 
 async def create_room(room_name: str):
     """Creates a new room with specified name."""
-    async with api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET) as lkapi:
-        # Use a `CreateRoomRequest` object to specify room options
+    lkapi = api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET)
+    try:
         room_info = await lkapi.room.create_room(CreateRoomRequest(
             name=room_name,
             empty_timeout=0,  # 0 means room persists until explicitly deleted
             max_participants=20
         ))
-    return room_info
+        return room_info
+    finally:
+        await lkapi.aclose()
 
 async def list_rooms():
     """Lists all active rooms.
-    
+
     Returns:
         list: A list of dictionaries containing room information
     """
-    async with api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET) as lkapi:
+    lkapi = api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET)
+    try:
         response = await lkapi.room.list_rooms(ListRoomsRequest())
-        
-        # Convert protobuf Room objects to dictionaries
         rooms_list = []
         for room in response.rooms:
             room_dict = {
@@ -61,52 +61,67 @@ async def list_rooms():
                 'num_participants': room.num_participants,
             }
             rooms_list.append(room_dict)
-            
         return rooms_list
+    finally:
+        await lkapi.aclose()
 
 async def delete_room(room_name: str):
     """Deletes a room and disconnects all participants."""
-    async with api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET) as lkapi:
+    lkapi = api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET)
+    try:
         await lkapi.room.delete_room(DeleteRoomRequest(room=room_name))
         return {"status": "success", "message": f"Room '{room_name}' deleted."}
+    finally:
+        await lkapi.aclose()
 
 async def list_participants(room_name: str):
     """Lists all participants in a given room."""
-    async with api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET) as lkapi:
+    lkapi = api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET)
+    try:
         participants = await lkapi.room.list_participants(ListParticipantsRequest(room=room_name))
         return [json.loads(p.json()) for p in participants.participants]
+    finally:
+        await lkapi.aclose()
 
 async def get_participant(room_name: str, identity: str):
     """Gets details for a specific participant."""
-    async with api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET) as lkapi:
+    lkapi = api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET)
+    try:
         participant = await lkapi.room.get_participant(RoomParticipantIdentity(room=room_name, identity=identity))
         return json.loads(participant.json())
+    finally:
+        await lkapi.aclose()
 
 async def update_participant(room_name: str, identity: str, metadata: dict = None, permissions: dict = None):
     """Updates a participant's metadata and/or permissions."""
-    async with api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET) as lkapi:
+    lkapi = api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET)
+    try:
         update_request = UpdateParticipantRequest(
             room=room_name,
             identity=identity
         )
-
         if metadata:
             update_request.metadata = json.dumps(metadata)
         if permissions:
             update_request.permission = api.ParticipantPermission(**permissions)
-
         participant = await lkapi.room.update_participant(update_request)
         return json.loads(participant.json())
+    finally:
+        await lkapi.aclose()
 
 async def remove_participant(room_name: str, identity: str):
     """Removes a participant from a room."""
-    async with api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET) as lkapi:
+    lkapi = api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET)
+    try:
         await lkapi.room.remove_participant(RoomParticipantIdentity(room=room_name, identity=identity))
         return {"status": "success", "message": f"Participant '{identity}' removed from room '{room_name}'."}
+    finally:
+        await lkapi.aclose()
 
 async def mute_track(room_name: str, identity: str, track_sid: str, muted: bool):
     """Mutes or unmutes a participant's track."""
-    async with api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET) as lkapi:
+    lkapi = api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET)
+    try:
         await lkapi.room.mute_published_track(MuteRoomTrackRequest(
             room=room_name,
             identity=identity,
@@ -114,13 +129,18 @@ async def mute_track(room_name: str, identity: str, track_sid: str, muted: bool)
             muted=muted
         ))
         return {"status": "success", "message": f"Track '{track_sid}' for participant '{identity}' muted: {muted}"}
+    finally:
+        await lkapi.aclose()
 
 async def move_participant(room_name: str, identity: str, destination_room_name: str):
     """Moves a participant to another room."""
-    async with api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET) as lkapi:
+    lkapi = api.LiveKitAPI(LIVEKIT_URL, API_KEY, API_SECRET)
+    try:
         await lkapi.room.move_participant(MoveParticipantRequest(
             room=room_name,
             identity=identity,
             destination_room=destination_room_name
         ))
         return {"status": "success", "message": f"Participant '{identity}' moved from '{room_name}' to '{destination_room_name}'."}
+    finally:
+        await lkapi.aclose()
