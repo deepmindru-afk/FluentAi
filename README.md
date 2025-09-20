@@ -25,6 +25,7 @@ A modern, full-stack chat application with AI integration, real-time communicati
 - **Contextual Conversations**: AI remembers previous interactions
 - **User-specific Memory**: Personalized responses based on chat history
 - **Memory Retrieval**: Smart context injection for relevant responses
+- **Room-Specific Context**: The specific room holds the context of the user. Even if you leave and join again, it holds the context and all the memories. New chat interactions are saved back into the memory store for continuous improvement.
 
 ## Tech Stack
 
@@ -155,11 +156,11 @@ The application uses Mem0 for persistent memory:
 ### Live Deployment
 
 ✅ **Frontend**: 
-- **URL**: [Deployed_link](https://fluent-ai-one.vercel.app/)
+- **URL**: [https://fluentai.vercel.app/](https://fluentai.vercel.app/)
 
 ✅ **Backend**:
-- **URL**: [https://fluentai-server.vercel.app/](https://fluentai-server.vercel.app/)
-- **Health Check**: [https://fluentai-server.vercel.app/health](https://fluentai-server.vercel.app/health)
+- **URL**: [https://fluentai-h2hq.onrender.com/](https://fluentai-h2hq.onrender.com/)
+
 
 ### Deployment Instructions
 
@@ -174,6 +175,11 @@ vercel --prod
 cd server
 vercel --prod
 ```
+
+## Future Plans
+
+- **Upcoming Participant Management**: The room will remember the individual context of two separate users, allowing multiple people to chat in the room at the same time.
+- **Speech-to-Text/Text-to-Speech**: The system will be extended with speech-to-text or text-to-speech services.
 
 ## Contributing
 
