@@ -6,9 +6,9 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from groq import Groq
 from mem0 import MemoryClient
-from config import *
-from services.livekit_api_service import *
-import threading
+
+from app.config import *
+from app.services.livekit_api_service import *
 import concurrent.futures
 
 app = Flask(__name__)
