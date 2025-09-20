@@ -9,7 +9,6 @@ from mem0 import MemoryClient
 
 from app.config import *
 from app.services.livekit_api_service import *
-import threading
 import concurrent.futures
 
 app = Flask(__name__)
