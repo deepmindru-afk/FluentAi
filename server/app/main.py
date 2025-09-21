@@ -5,7 +5,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from groq import Groq
-from mem0 import MemoryClient
+#from mem0 import MemoryClient
 
 from app.config import *
 from app.services.livekit_api_service import *
@@ -29,7 +29,7 @@ def ratelimit_handler(e):
 groq_client = Groq(
     api_key=GROQ_API_KEY
 )
-
+'''
 if MEM0_API_KEY and MEMO_ORG_ID and MEMO_PROJECT_ID:
     try:
         mem0 = MemoryClient(api_key=MEM0_API_KEY)
@@ -40,7 +40,8 @@ if MEM0_API_KEY and MEMO_ORG_ID and MEMO_PROJECT_ID:
 else:
     print("Missing Mem0 environment variables")
     mem0 = None
-
+'''
+mem0=None
 @app.route('/getToken', methods=['POST'])
 def get_token_route():
     """API endpoint to generate and return a LiveKit access token."""
@@ -409,62 +410,77 @@ def chat_route():
         return jsonify({"error": "message, username, and roomName are required."}), 400
 
     try:
-        user_room_id = f"{username}_{room_name}"
-
-        # 1. Fetch memories in parallel
-        memory_context = fetch_memories(message, user_room_id, username)
-
-        # 2. Prepare system + memory messages
-        messages = [
-            {
-                "role": "system",
-                "content": "You are a helpful AI assistant. Use provided context to give personalized responses."
-            }
+        conversation_history = [
+            {"role": "user", "content": message},
+            #{"role": "assistant", "content": ai_response}
         ]
-
-        if memory_context:
-            sorted_memories = sorted(memory_context, key=lambda x: x.get('score', 0), reverse=True)
-            memory_texts = [
-                f"Previous Conversation: {mem['memory']}"
-                for mem in sorted_memories[:3]
-                if mem.get('memory') and mem.get('score', 0) > 0.7
-            ]
-            if memory_texts:
-                messages.append({
-                    "role": "user",
-                    "content": "Relevant context:\n" + "\n\n".join(memory_texts)
-                })
-
-        # 3. Add last 5 turns of chat (10 messages max)
-        recent_messages = chat_messages[-10:]
-        messages.extend(recent_messages)
-        messages.append({"role": "user", "content": message})
-        print(f"Messages: {messages}")  
-
-        # 4. Call Groq
         chat_completion = groq_client.chat.completions.create(
             messages=messages,
             model="llama-3.1-8b-instant"
         )
         ai_response = chat_completion.choices[0].message.content
-
-        # 5. Save interaction asynchronously
-        conversation_history = [
-            {"role": "user", "content": message},
-            {"role": "assistant", "content": ai_response}
-        ]
-        if mem0:
-            try:
-                mem0.add(conversation_history, user_id=user_room_id, version="v2")
-                mem0.add(conversation_history, user_id=username, version="v2")
-                print(f"✅ Stored memories immediately for {username} in {user_room_id}")
-            except Exception as e:
-                print(f"❌ Memory storage error: {e}")
-
         return jsonify({"response": ai_response}), 200
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+    '''
+        try:
+            user_room_id = f"{username}_{room_name}"
+
+            # 1. Fetch memories in parallel
+            memory_context = fetch_memories(message, user_room_id, username)
+
+            # 2. Prepare system + memory messages
+            messages = [
+                {
+                    "role": "system",
+                    "content": "You are a helpful AI assistant. Use provided context to give personalized responses."
+                }
+            ]
+
+            if memory_context:
+                sorted_memories = sorted(memory_context, key=lambda x: x.get('score', 0), reverse=True)
+                memory_texts = [
+                    f"Previous Conversation: {mem['memory']}"
+                    for mem in sorted_memories[:3]
+                    if mem.get('memory') and mem.get('score', 0) > 0.7
+                ]
+                if memory_texts:
+                    messages.append({
+                        "role": "user",
+                        "content": "Relevant context:\n" + "\n\n".join(memory_texts)
+                    })
+            # 3. Add last 5 turns of chat (10 messages max)
+            recent_messages = chat_messages[-10:]
+            messages.extend(recent_messages)
+            messages.append({"role": "user", "content": message})
+            print(f"Messages: {messages}")  
+
+            # 4. Call Groq
+            chat_completion = groq_client.chat.completions.create(
+                messages=messages,
+                model="llama-3.1-8b-instant"
+            )
+            ai_response = chat_completion.choices[0].message.content
+
+            # 5. Save interaction asynchronously
+            conversation_history = [
+                {"role": "user", "content": message},
+                {"role": "assistant", "content": ai_response}
+            ]
+            if mem0:
+                try:
+                    mem0.add(conversation_history, user_id=user_room_id, version="v2")
+                    mem0.add(conversation_history, user_id=username, version="v2")
+                    print(f"✅ Stored memories immediately for {username} in {user_room_id}")
+                except Exception as e:
+                    print(f"❌ Memory storage error: {e}")
+
+            return jsonify({"response": ai_response}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    '''
+
 
 if __name__ == '__main__':
     app.run(debug=True)
