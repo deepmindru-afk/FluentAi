@@ -199,7 +199,7 @@ def join_room_route():
         # Check if this user has previous context in this room
         user_room_id = f"{username}_{room_name}"
         greeting_message = f"Hello! Welcome to {room_name}."
-        
+        """
         if mem0:
             try:
                 # Search for previous interactions in this room
@@ -224,7 +224,7 @@ def join_room_route():
                 
             except Exception as mem_error:
                 print(f"Memory retrieval error during greeting: {mem_error}")
-        
+        """
         return jsonify({
             "success": True,
             "greeting": greeting_message,
@@ -410,10 +410,18 @@ def chat_route():
         return jsonify({"error": "message, username, and roomName are required."}), 400
 
     try:
-        conversation_history = [
-            {"role": "user", "content": message},
-            #{"role": "assistant", "content": ai_response}
+        user_room_id = f"{username}_{room_name}"
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful AI assistant. Use provided context to give personalized responses."
+            }
         ]
+        messages.append({"role": "user", "content": message})
+        #conversation_history = [
+        #    {"role": "user", "content": message},
+        #    #{"role": "assistant", "content": ai_response}
+        #]
         chat_completion = groq_client.chat.completions.create(
             messages=messages,
             model="llama-3.1-8b-instant"
@@ -423,7 +431,7 @@ def chat_route():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    '''
+    """
         try:
             user_room_id = f"{username}_{room_name}"
 
@@ -479,7 +487,7 @@ def chat_route():
             return jsonify({"response": ai_response}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    '''
+    """
 
 
 if __name__ == '__main__':

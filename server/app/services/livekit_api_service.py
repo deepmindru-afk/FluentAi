@@ -24,9 +24,9 @@ async def generate_token(room_name: str, identity: str) -> str:
         AccessToken(API_KEY, API_SECRET)
         .with_identity(identity)
         .with_grants(VideoGrants(room_join=True, room=room_name))
-        .with_name("name")
         .with_sip_grants(api.SIPGrants(admin=True,call=True))
         .to_jwt()
+        #.with_name(name)
     )
     return token
 
