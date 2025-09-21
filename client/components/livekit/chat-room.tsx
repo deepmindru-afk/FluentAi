@@ -101,8 +101,8 @@ export function ChatRoom({ roomName, username, onLeave }: ChatRoomProps) {
         serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL!}
         token={token}
         connect={true}
-        video={false}
-        audio={false}
+        video={true}
+        audio={true}
       >
         <ChatRoomContent
           roomName={roomName}
