@@ -76,7 +76,7 @@ Edit `.env.local` with your configuration:
 ```env
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
+NEXT_PUBLIC_API_BASE_URL=https://fluentai-h2hq.onrender.com
 NEXT_PUBLIC_LIVEKIT_URL=wss://your-livekit-server-url
 ```
 
