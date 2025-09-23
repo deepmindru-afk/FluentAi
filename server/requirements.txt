@@ -21,6 +21,8 @@ livekit-api
 livekit
 flask_caching
 
+litellm
+
 # Runtime dependencies
 protobuf
 pydantic-core
@@ -37,6 +39,7 @@ PyJWT
 #==2.10.1
 urllib3
 #==2.2.3
+
 
 
 
