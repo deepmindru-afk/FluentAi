@@ -422,12 +422,13 @@ def chat_route():
         #    {"role": "user", "content": message},
         #    #{"role": "assistant", "content": ai_response}
         #]
-        chat_completion = groq_client.chat.completions.create(
-            messages=messages,
-            model="llama-3.1-8b-instant"
-        )
-        ai_response = chat_completion.choices[0].message.content
-        return jsonify({"response": ai_response}), 200
+        #chat_completion = groq_client.chat.completions.create(
+        #    messages=messages,
+        #    model="llama-3.1-8b-instant"
+        #)
+        #ai_response = chat_completion.choices[0].message.content
+        #return jsonify({"response": ai_response}), 200
+        return jsonify({"response": " "}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
