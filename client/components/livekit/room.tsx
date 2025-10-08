@@ -10,7 +10,7 @@ export interface Room {
 
 export function Room({ token, url, children }: Room) {
   return (
-    <LiveKitRoom serverUrl={url} token={token} connect={true}>
+    <LiveKitRoom serverUrl={url} token={token} connect={true} video={true} audio={true} >
       {children}
     </LiveKitRoom>
   )
